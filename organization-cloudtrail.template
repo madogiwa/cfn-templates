@@ -1,0 +1,146 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Parameters:
+  OrganizationId:
+    Type: String
+  ExpirationInDays:
+    Type: Number
+    Default: 365
+  TopicDisplayName:
+    Type: String
+    Default: CloudTrail
+
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          -
+            Status: Enabled
+            Prefix: "AWSLogs/"
+            ExpirationInDays: !Ref ExpirationInDays
+            NoncurrentVersionExpirationInDays: !Ref ExpirationInDays
+
+  S3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: S3Bucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: Allow
+            Action: s3:GetBucketAcl
+            Principal:
+              Service: "cloudtrail.amazonaws.com"
+            Resource: !Sub "arn:aws:s3:::${S3Bucket}"
+          -
+            Effect: Allow
+            Action: s3:PutObject
+            Principal:
+              Service: "cloudtrail.amazonaws.com"
+            Resource: !Sub arn:aws:s3:::${S3Bucket}/AWSLogs/${AWS::AccountId}/*
+            Condition:
+              StringEquals:
+                s3:x-amz-acl: "bucket-owner-full-control"
+          -
+            Effect: Allow
+            Action: s3:PutObject
+            Principal:
+              Service: "cloudtrail.amazonaws.com"
+            Resource: !Sub arn:aws:s3:::${S3Bucket}/AWSLogs/${OrganizationId}/*
+            Condition:
+              StringEquals:
+                s3:x-amz-acl: "bucket-owner-full-control"
+
+  Topic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: !Ref TopicDisplayName
+
+  TopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics:
+        - Ref: Topic
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: Allow
+            Action: SNS:Publish
+            Principal:
+              Service: "cloudtrail.amazonaws.com"
+            Resource: "*"
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: !Ref ExpirationInDays
+
+  CloudWatchRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: Allow
+            Action:
+              - sts:AssumeRole
+            Principal:
+              Service: "cloudtrail.amazonaws.com"
+      Policies:
+        -
+          PolicyName: "AllowWriteLogs"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - 
+                Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !GetAtt LogGroup.Arn
+
+#
+# IsOrganizationTrail is not supported yet.
+# You need use aws cli instead of CloudFormation
+#
+# `aws cloudtrail create-trail --name my-trail --s3-bucket-name my-bucket --is-organization-trail --is-multi-region-trail --include-global-service-events  --cloud-watch-logs-log-group-arn 'arn:aws:logs:...' --cloud-watch-logs-role-arn 'arn:aws:iam::...'`
+# `aws cloudtrail start-logging --name my-trail`
+#
+#  CloudTrailTrail:
+#    Type: AWS::CloudTrail::Trail
+#    DependsOn:
+#        - S3BucketPolicy
+#        - TopicPolicy
+#    Properties:
+#      S3BucketName:
+#        Ref: S3BucketPolicy
+#      SnsTopicName: !GetAtt Topic.TopicName
+#      CloudWatchLogsLogGroupArn: !GetAtt LogGroup.Arn
+#      CloudWatchLogsRoleArn: !GetAtt CloudWatchRole.Arn
+#      IsLogging: true
+#      IsMultiRegionTrail: true
+#      IncludeGlobalServiceEvents: true
+#      #IsOrganizationTrail: true
+
+Outputs:
+  TopicName:
+    Value: !GetAtt Topic.TopicName
+
+  S3BucketName:
+    Value: !Ref S3Bucket
+
+  LogGroupArn:
+    Value: !GetAtt LogGroup.Arn
+
+  LogGroupRole:
+    Value: !GetAtt CloudWatchRole.Arn
