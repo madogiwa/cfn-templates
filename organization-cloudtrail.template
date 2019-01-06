@@ -113,7 +113,7 @@ Resources:
 # IsOrganizationTrail is not supported yet.
 # You need use aws cli instead of CloudFormation
 #
-# `aws cloudtrail create-trail --name my-trail --s3-bucket-name my-bucket --is-organization-trail --is-multi-region-trail --include-global-service-events  --cloud-watch-logs-log-group-arn 'arn:aws:logs:...' --cloud-watch-logs-role-arn 'arn:aws:iam::...'`
+# `aws cloudtrail create-trail --name my-trail --s3-bucket-name my-bucket --is-organization-trail --is-multi-region-trail --include-global-service-events --enable-log-file-validation --cloud-watch-logs-log-group-arn 'arn:aws:logs:...' --cloud-watch-logs-role-arn 'arn:aws:iam::...'`
 # `aws cloudtrail start-logging --name my-trail`
 #
 #  CloudTrailTrail:
