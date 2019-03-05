@@ -10,7 +10,7 @@ Resources:
   S3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "${AWS::AccountId}-${AWS::StackName}"
+      BucketName: !Sub "${AWS::AccountId}-terraform-state"
       VersioningConfiguration:
         Status: Enabled
       BucketEncryption:
@@ -29,7 +29,7 @@ Resources:
   DynamoDB:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub "${AWS::AccountId}-${AWS::StackName}"
+      TableName: !Sub "${AWS::AccountId}-terraform-state"
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         -
