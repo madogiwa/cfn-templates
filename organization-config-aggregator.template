@@ -22,7 +22,7 @@ Resources:
   Aggregator:
     Type: AWS::Config::ConfigurationAggregator
     Properties:
-      ConfigurationAggregatorName: !Ref AWS::StackName
+      ConfigurationAggregatorName: "organization"
       OrganizationAggregationSource:
         RoleArn: !GetAtt Role.Arn
         AllAwsRegions: true
