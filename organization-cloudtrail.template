@@ -7,9 +7,6 @@ Parameters:
   ExpirationInDays:
     Type: Number
     Default: 365
-  TopicDisplayName:
-    Type: String
-    Default: CloudTrail
 
 Resources:
   S3Bucket:
@@ -61,7 +58,8 @@ Resources:
   Topic:
     Type: AWS::SNS::Topic
     Properties:
-      DisplayName: !Ref TopicDisplayName
+      DisplayName: cloudtrail
+      TopicName: cloudtrail
 
   TopicPolicy:
     Type: AWS::SNS::TopicPolicy
@@ -76,7 +74,7 @@ Resources:
             Action: SNS:Publish
             Principal:
               Service: "cloudtrail.amazonaws.com"
-            Resource: "*"
+            Resource: !Sub "aws:arn:sns:${AWS::Region}:${AWS::AccountId}:${Topic.TopicName}"
 
   LogGroup:
     Type: AWS::Logs::LogGroup
@@ -101,7 +99,7 @@ Resources:
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
-              - 
+              -
                 Effect: Allow
                 Action:
                   - logs:CreateLogStream
