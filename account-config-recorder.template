@@ -1,0 +1,99 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Parameters:
+  DeliveryFrequency:
+    Type: String
+    AllowedValues:
+      - One_Hour
+      - Three_Hours
+      - Six_Hours
+      - Twelve_Hours
+      - TwentyFour_Hours
+    Default: TwentyFour_Hours
+
+Resources:
+  Role:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: Allow
+            Action:
+              - sts:AssumeRole
+            Principal:
+              Service: "config.amazonaws.com"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSConfigRole
+      Policies:
+        -
+          PolicyName: !Sub "${AWS::StackName}-sns-topic"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource: !Ref Topic
+
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${AWS::AccountId}-config"
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          -
+            ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  S3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: S3Bucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: Allow
+            Action: s3:GetBucketAcl
+            Principal:
+              Service: "config.amazonaws.com"
+            Resource: !Sub "arn:aws:s3:::${S3Bucket}"
+          -
+            Effect: Allow
+            Action: s3:PutObject
+            Principal:
+              Service: "config.amazonaws.com"
+            Resource: !Sub "arn:aws:s3:::${S3Bucket}/AWSLogs/${AWS::AccountId}/Config/*"
+            Condition:
+              StringEquals:
+                s3:x-amz-acl: "bucket-owner-full-control"
+
+  Recorder:
+    Type: AWS::Config::ConfigurationRecorder
+    Properties:
+      Name: "default"
+      RecordingGroup:
+        IncludeGlobalResourceTypes: "true"
+        AllSupported: "true"
+      RoleARN: !GetAtt Role.Arn
+
+  Topic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: "account-config"
+      DisplayName: "account-config"
+
+  Delivery:
+    Type: AWS::Config::DeliveryChannel
+    Properties:
+      S3BucketName: !Ref S3Bucket
+      SnsTopicARN: !Ref Topic
+      ConfigSnapshotDeliveryProperties:
+        DeliveryFrequency: !Ref DeliveryFrequency
