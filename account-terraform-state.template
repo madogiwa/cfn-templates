@@ -25,6 +25,10 @@ Resources:
             NoncurrentVersionExpirationInDays: !Ref ExpirationInDays
             AbortIncompleteMultipartUpload:
               DaysAfterInitiation: !Ref ExpirationInDays
+      Tags:
+        -
+          Key: "ManagedBy"
+          Value: "CloudFormation"
 
   DynamoDB:
     Type: AWS::DynamoDB::Table
@@ -39,6 +43,10 @@ Resources:
         -
           AttributeName: "LockID"
           KeyType: "HASH"
+      Tags:
+        -
+          Key: "ManagedBy"
+          Value: "CloudFormation"
 
 Outputs:
   BucketName:

@@ -50,6 +50,10 @@ Resources:
           -
             ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
+      Tags:
+        -
+          Key: "ManagedBy"
+          Value: "CloudFormation"
 
   S3BucketPolicy:
     Type: AWS::S3::BucketPolicy

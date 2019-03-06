@@ -22,6 +22,10 @@ Resources:
             Prefix: "AWSLogs/"
             ExpirationInDays: !Ref ExpirationInDays
             NoncurrentVersionExpirationInDays: !Ref ExpirationInDays
+      Tags:
+        -
+          Key: "ManagedBy"
+          Value: "CloudFormation"
 
   S3BucketPolicy:
     Type: AWS::S3::BucketPolicy
