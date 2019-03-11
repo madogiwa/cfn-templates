@@ -23,6 +23,9 @@ Resources:
             Condition:
               Bool:
                 aws:MultiFactorAuthPresent: "true"
+                aws:SecureTransport: "true"
+              NumericLessThan:
+                aws:MultiFactorAuthAge: 54000
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/ReadOnlyAccess"
 
@@ -43,6 +46,9 @@ Resources:
             Condition:
               Bool:
                 aws:MultiFactorAuthPresent: "true"
+                aws:SecureTransport: "true"
+              NumericLessThan:
+                aws:MultiFactorAuthAge: 54000
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/PowerUserAccess"
 
@@ -63,5 +69,8 @@ Resources:
             Condition:
               Bool:
                 aws:MultiFactorAuthPresent: "true"
+                aws:SecureTransport: "true"
+              NumericLessThan:
+                aws:MultiFactorAuthAge: 54000
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/AdministratorAccess"
